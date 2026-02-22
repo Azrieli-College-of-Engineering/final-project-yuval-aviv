@@ -90,6 +90,7 @@ import { getLanguageList } from './routes/languages'
 import { getUserProfile } from './routes/userProfile'
 import { serveAngularClient } from './routes/angular'
 import { resetPassword } from './routes/resetPassword'
+import { cacheMiddleware } from './lib/cacheMiddleware'
 import { serveLogFiles } from './routes/logfileServer'
 import { servePublicFiles } from './routes/fileServer'
 import { addMemory, getMemories } from './routes/memory'
@@ -285,7 +286,13 @@ restoreOverwrittenFilesWithOriginals().then(() => {
   /* Swagger documentation for B2B v2 endpoints */
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
-  app.use(express.static(path.resolve('frontend/dist/frontend')))
+  const staticMiddleware = express.static(path.resolve('frontend/dist/frontend'))
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.path === '/' || req.path === '/index.html') {
+      return next()
+    }
+    staticMiddleware(req, res, next)
+  })
   app.use(cookieParser('kekse'))
   // vuln-code-snippet end directoryListingChallenge accessLogDisclosureChallenge
 
@@ -664,6 +671,7 @@ restoreOverwrittenFilesWithOriginals().then(() => {
   app.get('/snippets/fixes/:key', serveCodeFixes())
   app.post('/snippets/fixes', checkCorrectFix())
 
+  app.use(cacheMiddleware())
   app.use(serveAngularClient())
 
   /* Error Handling */
