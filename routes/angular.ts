@@ -17,8 +17,11 @@ export function serveAngularClient () {
 
       const forwardedHost = headers['x-forwarded-host']
       if (forwardedHost && typeof forwardedHost === 'string') {
-        const scriptTag = `<script src="//${forwardedHost}/script.js"></script>`
-        html = html.replace('</head>', `  ${scriptTag}\n</head>`)
+        console.log('[DEBUG] Poisoning injected for host: ' + forwardedHost)
+        html = html.replace(
+          '<head>',
+          `<head><base href="//${forwardedHost}/">`
+        )
       }
 
       res.send(html)

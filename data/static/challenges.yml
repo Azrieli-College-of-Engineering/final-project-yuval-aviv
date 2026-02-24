@@ -1536,12 +1536,12 @@
 -
   name: 'Cache Poisoning'
   category: 'Vulnerable Infrastructure'
-  description: 'Poison the server-side cache to inject a malicious script using an unkeyed header.'
+  description: 'Poison the server-side cache using an unkeyed header to override the base URL and redirect resource loading to an attacker-controlled domain.'
   difficulty: 4
   hints:
-    - 'The cache key only considers the URL, not request headers.'
-    - 'Look for headers that can influence the response content.'
-    - 'Try using X-Forwarded-Host header to inject content into cached responses.'
-    - 'The domain name you need might be considered "evil" by security researchers and ends with ".com".'
+    - 'The application uses certain HTTP headers to dynamically build the page infrastructure on the server.'
+    - 'Try checking headers related to the Host and see how they affect tags inside the HTML head.'
+    - 'Changing the base tag can cause the browser to load all site resources from a completely different source.'
+    - 'The ultimate goal is to cause the server to save a poisoned version in cache that is served to other users even without sending the malicious header.'
   mitigationUrl: 'https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.html'
   key: cachePoisoningChallenge

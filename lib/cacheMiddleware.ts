@@ -15,6 +15,18 @@ interface CacheEntry {
 const cache: Record<string, CacheEntry> = {}
 const CACHE_TTL = 5 * 60 * 1000
 
+function hasPoisonedBaseHref (body: string): boolean {
+  
+  const match = body.match(/<base[^>]*\shref="([^"]*)"[^>]*>/i)
+  if (!match) {
+    return false
+  }
+
+  const href = match[1]
+  
+  return href !== '/'
+}
+
 export function cacheMiddleware () {
   return (req: Request, res: Response, next: NextFunction) => {
     const cacheKey = req.originalUrl
@@ -24,8 +36,9 @@ export function cacheMiddleware () {
       const now = Date.now()
 
       if (now - entry.timestamp < CACHE_TTL) {
-        if (entry.content.includes('evil.com') && challenges.cachePoisoningChallenge) {
-          challengeUtils.solveIf(challenges.cachePoisoningChallenge, () => { return true })
+        if (hasPoisonedBaseHref(entry.content) && challenges.cachePoisoningChallenge) {
+         
+          challengeUtils.solve(challenges.cachePoisoningChallenge)
         }
         return res.send(entry.content)
       } else {
@@ -36,9 +49,6 @@ export function cacheMiddleware () {
     const originalSend = res.send.bind(res)
     res.send = function (body?: any) {
       if (typeof body === 'string') {
-        if (body.includes('evil.com') && challenges.cachePoisoningChallenge) {
-          challengeUtils.solveIf(challenges.cachePoisoningChallenge, () => { return true })
-        }
         cache[cacheKey] = {
           content: body,
           timestamp: Date.now()
